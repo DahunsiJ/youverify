@@ -1,11 +1,16 @@
 #!/usr/bin/env groovy
 pipeline {
     agent any
-
+    
+    environment {
+        AZURE_CREDENTIALS = credentials('azure-service-principal')
+    }
+    
     stages {
         stage("Checkout the GitHub Repository") {
             steps {
-                git branch: "main", url: "https://github.com/DahunsiJ/youverify_DevSecOps.git"
+                    git branch: "main", url: "https://github.com/DahunsiJ/youverify_DevSecOps.git"
+                }
             }
         }
         stage("Terraform Initialization") {
@@ -30,7 +35,7 @@ pipeline {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
-                        sh "terraform validate"
+                        sh "terraform fmt"
                     }
                 }
             }
@@ -47,7 +52,6 @@ pipeline {
         stage("Terraform Apply or Destroy") {
             steps {
                 script {
-                    def action = 'apply' // or 'destroy' depending on your use case
                     dir('devSecOps/aks/terraformIAC') {
                         sh "terraform ${action} --auto-approve"
                     }
