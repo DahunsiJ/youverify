@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+
+# Build output
+build/
+
+# Logs
+npm-debug.log*
+
+# Environment configuration
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/editor directories
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Docker-related files
+Dockerfile
+.dockerignore
+
+# Git files
+.git/
+.gitignore
+
+# Miscellaneous
+*.tgz
+*.zip
+*.rar
+*.tar.gz
+*.gz
+
+# Test results
+test-results/
