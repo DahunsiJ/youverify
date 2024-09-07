@@ -53,7 +53,7 @@ pipeline {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
-                        sh "terraform $(action) -auto-approve"
+                        sh "terraform $(action) --auto-approve"
                     }
                 }
             }
