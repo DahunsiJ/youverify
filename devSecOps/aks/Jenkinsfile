@@ -10,21 +10,21 @@ pipeline {
     }
     
     stages {
-        stage('Login to Azure') {
-            steps {
-                script {
-                    def azureCredentialsJson = readJSON text: "${AZURE_CREDENTIALS}"
-                    sh """
-                        az login --service-principal \
-                        --username ${azureCredentialsJson.clientId} \
-                        --password ${azureCredentialsJson.clientSecret} \
-                        --tenant ${azureCredentialsJson.tenantId}
-                    """
-                    // Optionally set the subscription
-                    sh "az account set --subscription ${azureCredentialsJson.subscriptionId}"
-                }
-            }
-        }
+        // stage('Login to Azure') {
+        //     steps {
+        //         script {
+        //             def azureCredentialsJson = readJSON text: "${AZURE_CREDENTIALS}"
+        //             sh """
+        //                 az login --service-principal \
+        //                 --username ${azureCredentialsJson.clientId} \
+        //                 --password ${azureCredentialsJson.clientSecret} \
+        //                 --tenant ${azureCredentialsJson.tenantId}
+        //             """
+        //             // Optionally set the subscription
+        //             sh "az account set --subscription ${azureCredentialsJson.subscriptionId}"
+        //         }
+        //     }
+        // }
         stage('Checkout the GitHub Repository') {
             steps {
                 git branch: "main", url: "https://github.com/DahunsiJ/youverify_DevSecOps.git"
