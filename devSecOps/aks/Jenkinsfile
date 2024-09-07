@@ -4,16 +4,33 @@ pipeline {
     
     environment {
         AZURE_CREDENTIALS = credentials('azure-service-principal')
+        // ACTION = 'apply'  // You can modify this or make it a parameter for apply/destroy
+        // RESOURCE_GROUP = 'your-azure-resource-group'
+        // AKS_CLUSTER_NAME = 'your-aks-cluster-name'
     }
     
     stages {
-        stage("Checkout the GitHub Repository") {
+        stage('Login to Azure') {
             steps {
-                    git branch: "main", url: "https://github.com/DahunsiJ/youverify_DevSecOps.git"
+                script {
+                    def azureCredentialsJson = readJSON text: "${AZURE_CREDENTIALS}"
+                    sh """
+                        az login --service-principal \
+                        --username ${azureCredentialsJson.clientId} \
+                        --password ${azureCredentialsJson.clientSecret} \
+                        --tenant ${azureCredentialsJson.tenantId}
+                    """
+                    // Optionally set the subscription
+                    sh "az account set --subscription ${azureCredentialsJson.subscriptionId}"
                 }
             }
         }
-        stage("Terraform Initialization") {
+        stage('Checkout the GitHub Repository') {
+            steps {
+                git branch: "main", url: "https://github.com/DahunsiJ/youverify_DevSecOps.git"
+            }
+        }
+        stage('Terraform Initialization') {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
@@ -22,7 +39,7 @@ pipeline {
                 }
             }
         }
-        stage("Terraform Format") {
+        stage('Terraform Format') {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
@@ -31,16 +48,16 @@ pipeline {
                 }
             }
         }
-        stage("Terraform Validate") {
+        stage('Terraform Validate') {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
-                        sh "terraform fmt"
+                        sh "terraform validate"
                     }
                 }
             }
         }
-        stage("Terraform Plan") {
+        stage('Terraform Plan') {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
@@ -49,20 +66,24 @@ pipeline {
                 }
             }
         }
-        stage("Terraform Apply or Destroy") {
+        stage('Terraform Apply or Destroy') {
             steps {
                 script {
                     dir('devSecOps/aks/terraformIAC') {
-                        sh "terraform ${action} --auto-approve"
+                        sh "terraform ${ACTION} --auto-approve"
                     }
                 }
             }
         }
-        // stage("Deploy to AKS") {
+        // stage('Deploy to AKS') {
         //     steps {
         //         script {
+        //             // Authenticate with AKS using the service principal
+        //             sh """
+        //                 az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+        //             """
+        //             // Deploy the application
         //             dir('kubernetes') {
-        //                 sh "aws eks update-kubeconfig --name myapp-eks-cluster"
         //                 sh "kubectl apply -f nginx-deployment.yaml"
         //                 sh "kubectl apply -f nginx-service.yaml"
         //             }
