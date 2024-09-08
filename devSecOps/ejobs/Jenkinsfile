@@ -7,9 +7,9 @@ pipeline {
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
         DOCKERHUB_CREDENTIALS = credentials('dockerhub')
-        DOCKER_IMAGE = 'dahunsij/ejobs_frontend'
+        DOCKER_IMAGE = 'dahunsij/ejobs'
         DOCKER_NETWORK = 'ejobs_network'
-        CONTAINER_NAME = 'ejobs_frontend'
+        CONTAINER_NAME = 'ejobs'
     }
     stages {
         stage('Clean Workspace') {
@@ -20,33 +20,33 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'GIT_PAT', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASS')]) {
-                        sh 'git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/Essentialng/ejobs.git'
-                        sh 'cd ejobs && git checkout main'
-                    }
+                    // withCredentials([usernamePassword(credentialsId: 'GIT_PAT', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASS')]) {
+                        sh 'git clone https://github.com/DahunsiJ/youverify_DevSecOps.git'
+                        sh 'cd devSecOps/ejobs && git checkout main'
+                    // }
                 }
             }
         }
         stage('Read and Increment Version') {
             steps {
                 script {
-                    def version = readFile('ejobs/frontend/version.txt').trim()
+                    def version = readFile('devSecOps/ejobs/version.txt').trim()
                     def parts = version.tokenize('.')
                     parts[2] = (parts[2].toInteger() + 1).toString()
                     def newVersion = parts.join('.')
-                    writeFile(file: 'ejobs/frontend/version.txt', text: newVersion)
-                    sh 'cd ejobs && git add frontend/version.txt && git commit -m "Update version to ${newVersion}" && git push'
+                    writeFile(file: 'devSecOps/ejobs/version.txt', text: newVersion)
+                    sh 'cd devSecOps && git add ejobs/version.txt && git commit -m "Update version to ${newVersion}" && git push'
                     env.BUILD_VERSION = newVersion
                 }
             }
         }
         stage('SonarQube Analysis') {
             steps {
-                dir('ejobs/frontend') {
+                dir('devSecOps/ejobs') {
                     withSonarQubeEnv('SonarQube-Servers') {
                         sh '''
-                        $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=ejobs_frontend-CICD \
-                        -Dsonar.projectKey=ejobs_frontend-CICD \
+                        $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=ejobs_CICD \
+                        -Dsonar.projectKey=ejobs_CICD \
                         -X
                         '''
                     }
@@ -62,40 +62,55 @@ pipeline {
         }
         stage('Install Dependencies') {
             steps {
-                dir('ejobs/frontend') {
+                dir('devSecOps/ejobs') {
                     sh "npm install"
                 }
             }
         }
-        stage('TRIVY FS Scan') {
+        stage('TRIVY File Scan') {
             steps {
-                dir('ejobs/frontend') {
+                dir('devSecOps/ejobs') {
                     sh "trivy fs . > trivyfs.txt"
                 }
             }
         }
+
+        stage("Install Dependencies") {
+            steps {
+                dir('devSecOps/ejobs') {
+                    sh "npm install"
+                    sh "npm run build"
+                }
+            }
+        }
+        stage('OWASP Dependency Check ') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --format XML ', odcInstallation: 'Dependency-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
         stage('Docker Build & Push') {
             steps {
-                dir('ejobs/frontend') {
+                dir('devSecOps/ejobs') {
                     script {
                         withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                             docker.withRegistry('https://index.docker.io/v1/', 'dockerhub') {
                                 
-                                sh "docker build -t dahunsij/ejobs_frontend:latest -f Dockerfile ."
+                                sh "docker build -t dahunsij/ejobs:latest -f Dockerfile ."
 
-                                sh "docker tag dahunsij/ejobs_frontend:latest dahunsij/ejobs_frontend:${env.BUILD_VERSION}.RELEASE"
-                                sh "docker push dahunsij/ejobs_frontend:${env.BUILD_VERSION}.RELEASE"
-                                // Clean up old images with the name "ejobs_frontend"
+                                sh "docker tag dahunsij/ejobs:latest dahunsij/ejobs:${env.BUILD_VERSION}.RELEASE"
+                                sh "docker push dahunsij/ejobs:${env.BUILD_VERSION}.RELEASE"
+                                // Clean up old images with the name "ejobs"
                                 sh '''
-                                docker images | grep dahunsij/ejobs_frontend | grep -v ":${env.BUILD_VERSION}.RELEASE" | awk '{print $3}' | xargs docker rmi -f || true
+                                docker images | grep dahunsij/ejobs | grep -v ":${env.BUILD_VERSION}.RELEASE" | awk '{print $3}' | xargs docker rmi -f || true
                                 '''
 
                                 // Stop and remove any existing container with the same name
-                                sh "docker stop ejobs_frontend || true"
-                                sh "docker rm ejobs_frontend || true"
+                                sh "docker stop ejobs || true"
+                                sh "docker rm ejobs || true"
 
                                 // // Run the container
-                                sh "docker run -d -p 3002:3002 --name ejobs_frontend dahunsij/ejobs_frontend:${env.BUILD_VERSION}.RELEASE"
+                                sh "docker run -d -p 3002:3002 --name ejobs dahunsij/ejobs:${env.BUILD_VERSION}.RELEASE"
                             }
                         
                         }
@@ -105,68 +120,18 @@ pipeline {
         }
         stage('TRIVY Image Scan') {
             steps {
-                sh "trivy image dahunsij/ejobs_frontend:${env.BUILD_VERSION}.RELEASE > trivyimage.txt"
+                sh "trivy image dahunsij/ejobs:${env.BUILD_VERSION}.RELEASE > trivyimage.txt"
             }
         }
         stage('Deploy to VM') {
             steps {
                 sshagent(['vm-ssh-credentials']) {
                     sh '''
-                    ssh DevSecOps_Admin@13.92.179.121 "docker pull dahunsij/ejobs_frontend:${BUILD_VERSION}.RELEASE && docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true && docker run -d -p 3002:3002 --name ${CONTAINER_NAME} dahunsij/ejobs_frontend:${BUILD_VERSION}.RELEASE"
+                    ssh yv_admin@52.224.66.61 "docker pull dahunsij/ejobs:${BUILD_VERSION}.RELEASE && docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true && docker run -d -p 3002:3002 --name ${CONTAINER_NAME} dahunsij/ejobs:${BUILD_VERSION}.RELEASE"
                     '''
                 }
             }
         }
-        // stage('Setup Nginx for Frontend and Backend') {
-        //     steps {
-        //         sshagent(['vm-ssh-credentials']) {
-        //             sh '''
-        //             ssh DevSecOps_Admin@13.92.179.121 '
-        //                 # Update package lists and install Nginx & Certbot if not already installed
-        //                 sudo apt-get update &&
-        //                 sudo apt-get install -y nginx certbot python3-certbot-nginx &&
-
-        //                 # Create or overwrite the server block for the domain
-        //                 echo "
-        //                 server {
-        //                     listen 80;
-        //                     listen [::]:80;
-        //                     server_name ejobs.com.ng;
-
-        //                     # Frontend configuration
-        //                     location / {
-        //                         proxy_pass http://localhost:3002;
-        //                         proxy_set_header Host \$host;
-        //                         proxy_set_header X-Real-IP \$remote_addr;
-        //                         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        //                         proxy_set_header X-Forwarded-Proto \$scheme;
-        //                     }
-
-        //                     # Backend configuration (served at /api)
-        //                     location /api/ {
-        //                         proxy_pass http://localhost:3003/;
-        //                         proxy_set_header Host \$host;
-        //                         proxy_set_header X-Real-IP \$remote_addr;
-        //                         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        //                         proxy_set_header X-Forwarded-Proto \$scheme;
-        //                     }
-        //                 }" | sudo tee /etc/nginx/sites-available/ejobs.com.ng &&
-
-        //                 # Enable the site
-        //                 sudo ln -sf /etc/nginx/sites-available/ejobs.com.ng /etc/nginx/sites-enabled/ejobs.com.ng &&
-
-        //                 # Test Nginx configuration
-        //                 sudo nginx -t &&
-
-        //                 # Reload Nginx to apply changes
-        //                 sudo systemctl reload nginx &&
-
-        //                 # Obtain or renew SSL certificate for the domain
-        //                 sudo certbot --nginx -d ejobs.com.ng --non-interactive --agree-tos -m your-email@example.com -n
-        //             '
-        //             '''
-        //         }
-        //     }
-        // }
+        
     }
 }
