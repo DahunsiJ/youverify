@@ -82,8 +82,8 @@ pipeline {
                 dir('youverify_DevSecOps/devSecOps/ejobs') {
                     sh 'ls -la'
                     sh "npm install"
-                    sh "npm audit fix"
-                    sh "npm audit fix --force"
+                    // sh "npm audit fix"
+                    // sh "npm audit fix --force"
                     // sh "npm run build"
                 }
             }
