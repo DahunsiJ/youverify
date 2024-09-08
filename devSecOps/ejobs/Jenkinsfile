@@ -30,14 +30,27 @@ pipeline {
         }
         stage('Read and Increment Version') {
             steps {
-                dir('devSecOps/ejobs') {
+                dir('youverify_DevSecOps/devSecOps/ejobs') {
                     script {
-                        def version = readFile('devSecOps/ejobs/version.txt').trim()
+                        // Read the version file
+                        def version = readFile('version.txt').trim()
+                        
+                        // Split the version number and increment the last part
                         def parts = version.tokenize('.')
-                        parts[2] = (parts[2].toInteger() + 1).toString()
+                        parts[2] = (parts[2].toInteger() + 1).toString() // Increment patch version
+                        
+                        // Rebuild the version string
                         def newVersion = parts.join('.')
-                        writeFile(file: 'devSecOps/ejobs/version.txt', text: newVersion)
-                        sh 'cd devSecOps && git add ejobs/version.txt && git commit -m "Update version to ${newVersion}" && git push'
+                        
+                        // Write the new version back to the file
+                        writeFile(file: 'version.txt', text: newVersion)
+                        
+                        // Stage, commit, and push the new version
+                        sh 'git add version.txt'
+                        sh "git commit -m 'Update version to ${newVersion}'"
+                        sh 'git push'
+                        
+                        // Set the new version as an environment variable
                         env.BUILD_VERSION = newVersion
                     }
                 }
