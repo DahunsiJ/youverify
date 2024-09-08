@@ -64,6 +64,7 @@ pipeline {
             steps {
                 dir('devSecOps/ejobs') {
                     sh "npm install"
+                    // sh "npm run build"
                 }
             }
         }
@@ -71,15 +72,6 @@ pipeline {
             steps {
                 dir('devSecOps/ejobs') {
                     sh "trivy fs . > trivyfs.txt"
-                }
-            }
-        }
-
-        stage("Install Dependencies") {
-            steps {
-                dir('devSecOps/ejobs') {
-                    sh "npm install"
-                    sh "npm run build"
                 }
             }
         }
