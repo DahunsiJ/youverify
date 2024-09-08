@@ -80,6 +80,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 dir('youverify_DevSecOps/devSecOps/ejobs') {
+                    sh 'ls -la'
                     sh "npm install"
                     // sh "npm run build"
                 }
