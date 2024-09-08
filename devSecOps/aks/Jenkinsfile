@@ -3,7 +3,7 @@ pipeline {
     agent any
     
     environment {
-        AZURE_CREDENTIALS = credentials('azure-service-principal')
+        AZURE_CREDENTIALS = credentials('azure-service-principal-')
         // ACTION = 'apply'  // You can modify this or make it a parameter for apply/destroy
         // RESOURCE_GROUP = 'your-azure-resource-group'
         // AKS_CLUSTER_NAME = 'your-aks-cluster-name'
