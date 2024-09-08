@@ -20,11 +20,12 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    // withCredentials([usernamePassword(credentialsId: 'GIT_PAT', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASS')]) {
-                        sh 'git clone https://github.com/DahunsiJ/youverify_DevSecOps.git'
+                    withCredentials([usernamePassword(credentialsId: 'GIT_PAT', usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_PASS')]) {
+                        sh 'git clone https://${GITHUB_USER}:${GITHUB_PASS}@github.com/DahunsiJ/youverify_DevSecOps.git'
+                        // sh 'git clone https://github.com/DahunsiJ/youverify_DevSecOps.git'
                         sh 'ls -al'
                         sh 'cd youverify_DevSecOps/devSecOps/ejobs && git checkout main'
-                    // }
+                    }
                 }
             }
         }
