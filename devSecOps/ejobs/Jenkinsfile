@@ -133,15 +133,15 @@ pipeline {
                 sh "trivy image dahunsij/ejobs:${env.BUILD_VERSION}.RELEASE > trivyimage.txt"
             }
         }
-        stage('Deploy to VM') {
-            steps {
-                sshagent(['vm-ssh-credentials']) {
-                    sh '''
-                    ssh yv_admin@13.91.245.175 "docker pull dahunsij/ejobs:${BUILD_VERSION}.RELEASE && docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true && docker run -d -p 3002:3002 --name ${CONTAINER_NAME} dahunsij/ejobs:${BUILD_VERSION}.RELEASE"
-                    '''
-                }
-            }
-        }
+        // stage('Deploy to VM') {
+        //     steps {
+        //         sshagent(['vm-ssh-credentials']) {
+        //             sh '''
+        //             ssh yv_admin@13.91.245.175 "docker pull dahunsij/ejobs:${BUILD_VERSION}.RELEASE && docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true && docker run -d -p 3002:3002 --name ${CONTAINER_NAME} dahunsij/ejobs:${BUILD_VERSION}.RELEASE"
+        //             '''
+        //         }
+        //     }
+        // }
         // stage('Deploy to Kubernets'){
         //     steps{
         //         script{
@@ -168,3 +168,21 @@ pipeline {
         }
     }
 }
+
+
+
+// az login
+// az group create --name yv_ResourceGroup --location westus
+// az aks create --resource-group yv_ResourceGroup --name yv_AKSCluster --node-count 3 --enable-addons monitoring --generate-ssh-keys
+// az aks get-credentials --resource-group yv_ResourceGroup --name yv_AKSCluster
+
+// # 1. Setup Git configuration
+// git config --global user.name "your.name"
+// git config --global user.email "your-email-address"
+
+// # 2. Clone the repository and commit changes
+// git clone https://github.com/Ashfaque-9x/a-youtube-clone-app.git
+// cd a-youtube-clone-app
+// git add .
+// git commit -m "test change"
+// git push origin main
