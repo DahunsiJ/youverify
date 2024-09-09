@@ -43,7 +43,7 @@ pipeline {
                         // Rebuild the version string
                         def newVersion = parts.join('.')
                         
-                        // Write the new version back to the file
+                        // Write the new version back to the fdckr_pat_l68q_OqyDa8q4ddMbItYEL-tklcile
                         writeFile(file: 'version.txt', text: newVersion)
                         
                         // Stage, commit, and push the new version
@@ -59,15 +59,13 @@ pipeline {
         }
         stage('SonarQube Analysis') {
             steps {
-                // dir('devSecOps/ejobs') {
-                    withSonarQubeEnv('SonarQube-Servers') {
-                        sh '''
-                        $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=ejobs_CICD \
-                        -Dsonar.projectKey=ejobs_CICD \
-                        -X
-                        '''
-                    }
-                // }
+                withSonarQubeEnv('SonarQube-Servers') {
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=ejobs_CICD \
+                    -Dsonar.projectKey=ejobs_CICD \
+                    -X
+                    '''
+                }
             }
         }
         stage('Quality Gate') {
@@ -139,7 +137,7 @@ pipeline {
             steps {
                 sshagent(['vm-ssh-credentials']) {
                     sh '''
-                    ssh yv_admin@52.224.66.61 "docker pull dahunsij/ejobs:${BUILD_VERSION}.RELEASE && docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true && docker run -d -p 3002:3002 --name ${CONTAINER_NAME} dahunsij/ejobs:${BUILD_VERSION}.RELEASE"
+                    ssh yv_admin@13.91.245.175 "docker pull dahunsij/ejobs:${BUILD_VERSION}.RELEASE && docker stop ${CONTAINER_NAME} || true && docker rm ${CONTAINER_NAME} || true && docker run -d -p 3002:3002 --name ${CONTAINER_NAME} dahunsij/ejobs:${BUILD_VERSION}.RELEASE"
                     '''
                 }
             }
