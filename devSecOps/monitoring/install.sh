@@ -17,18 +17,18 @@ sudo mv consoles/ console_libraries/ /etc/prometheus/
 sudo mv prometheus.yml /etc/prometheus/prometheus.yml
 sudo chown -R prometheus:prometheus /etc/prometheus/ /data/
 sudo cat > /etc/systemd/system/prometheus.service << EOF
-[Unit]
-Description=Prometheus
-Wants=network-online.target
-After=network-online.target
+        [Unit]
+        Description=Prometheus
+        Wants=network-online.target
+        After=network-online.target
 
-[Service]
-User=prometheus
-ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/data --web.listen-address=0.0.0.0:9090
-Restart=always
+        [Service]
+        User=prometheus
+        ExecStart=/usr/local/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/data --web.listen-address=0.0.0.0:9090
+        Restart=always
 
-[Install]
-WantedBy=multi-user.target
+        [Install]
+        WantedBy=multi-user.target
 EOF
 
 sudo systemctl enable prometheus
