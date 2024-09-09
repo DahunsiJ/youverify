@@ -1,7 +1,7 @@
 # Variable for Azure Location
 variable "location" {
   description = "The Azure region to deploy resources"
-  default     = "East US"
+  default     = "West US"
 }
 
 # Variable for Admin Username
