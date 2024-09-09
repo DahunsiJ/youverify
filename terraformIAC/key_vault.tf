@@ -1,6 +1,6 @@
 # Azure Key Vault
 resource "azurerm_key_vault" "yv_key_vault" {
-  name                = "yv-key-vault"
+  name                = "yv-k-vault"
   location            = azurerm_resource_group.yv_rg.location
   resource_group_name = azurerm_resource_group.yv_rg.name
   tenant_id           = data.azurerm_client_config.current.tenant_id

@@ -6,7 +6,7 @@ variable "resource_group_name" {
 variable "location" {
   description = "The Azure location where the AKS cluster will be created"
   type        = string
-  default     = "eastus"
+  default     = "westus"
 }
 
 variable "aks_cluster_name" {
@@ -30,3 +30,7 @@ variable "dns_prefix" {
   description = "The DNS prefix for the AKS cluster"
   type        = string
 }
+
+variable "subscription_id" {}
+variable "tenant_id" {}
+
